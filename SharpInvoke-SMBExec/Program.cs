@@ -89,12 +89,12 @@ namespace SharpInvoke_SMBExec
             if (show_help)
             {
                 //Check for help flag, if it's there run help and exit.
-                displayHelp();
+                displayHelp(null,options);
                 return;
             }
             else if(string.IsNullOrEmpty(username) || string.IsNullOrEmpty(hash) || string.IsNullOrEmpty(target))
             {
-                displayHelp();
+                displayHelp("Missing Required Option!", options);
                 return;
             }
 
@@ -1982,10 +1982,12 @@ namespace SharpInvoke_SMBExec
             }
         }
 
-        public static void displayHelp()
+        public static void displayHelp(string message, OptionSet o)
         {
-            Console.WriteLine("usage {0} -username user -hash aad3b435b51404eeaad3b435b51404ee:a1be643b5b14ec8a12135d86b5c78616 -target 192.168.2.25", AppDomain.CurrentDomain.FriendlyName);
-            Console.ReadLine();
+            Console.WriteLine("{0} \r\n Usage: Sharp-InvokeWMIExec.exe -h=\"hash\" -u=\"test\\username\" -t=\"target\" -c=\"command\" ", message);
+            o.WriteOptionDescriptions(Console.Error);
+            Console.ReadKey();
+            Environment.Exit(-1);
         }
         public static byte[] getByteRange(byte[] array, int start, int end)
         {
