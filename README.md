@@ -10,7 +10,7 @@ Sharp-SMBExec.exe -h "hash" -u "username" -d "domain.tld" -t "target.domain.tld"
 This Assembly will allow you to execute a command on a target machine using SMB by providing an NTLM hash for the specified user.
 
 # Help
-<p>
+```
 Sharp-SMBExec.exe -h "hash" -u "username" -d "domain.tld" -t "target.domain.tld" -c "command" -cc
 Help (-?)                                                                                                               
 Username* (-u)   Username to use for authentication                                                                     
@@ -23,4 +23,4 @@ ComSpec (-cc)    Default = Disabled: Prepend %COMSPEC% /C to Command [Default='F
 SMB1 (-v1)       Force SMB1. The default behavior is to perform SMB Version negotiation and use SMB2 if it's supported by the target [Default='False']
 Sleep (-st)      Time in seconds to sleep. Change this value if you're getting weird results. [Default='15']            
 Debug (-dbg)     Switch, Enable debugging [Default='False']                              
-</p>
+```
