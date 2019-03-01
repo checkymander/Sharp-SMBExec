@@ -19,7 +19,7 @@ Domain (-d)      Domain to use for authentication. This parameter is not needed 
 Target (-t)      Hostname or IP Address of the target.                                                                  
 Command (-c)     Command to execute on the target. If a command is not specified, the function will check to see if the username and hash provide local admin access on the target
 Service (-s)     Default = 20 Character Random. The Name of the service to create and delete on the target.             
-ComSpec (-cc)    Default = Disabled: Prepend %COMSPEC% /C to Command [Default='False']                                  
+ComSpec (-cc)    Prepend %COMSPEC% /C to Command [Default='False']                                  
 SMB1 (-v1)       Force SMB1. The default behavior is to perform SMB Version negotiation and use SMB2 if it's supported by the target [Default='False']
 Sleep (-st)      Time in seconds to sleep. Change this value if you're getting weird results. [Default='15']            
 Debug (-dbg)     Switch, Enable debugging [Default='False']                              
