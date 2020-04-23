@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SharpInvoke_SMBExec</RootNamespace>
-    <AssemblyName>SharpInvoke-SMBExec</AssemblyName>
+    <AssemblyName>Sharp-SMBExec</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
