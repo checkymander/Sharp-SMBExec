@@ -1,4 +1,4 @@
-# SharpInvoke-SMBExec
+# Sharp-SMBExec
 A native C# conversion of Kevin Robertsons Invoke-SMBExec powershell script. (https://github.com/Kevin-Robertson/Invoke-TheHash/blob/master/Invoke-SMBExec.ps1)
 
 Built for .NET 3.5
